@@ -1,0 +1,12 @@
+---
+- name: install jenkins
+  hosts: jenkins
+  become: true
+  tasks:
+   - name: copy the script
+     copy:
+      src: scripts/jen.sh
+      dest: /home/ubuntu
+      mode: 0777
+   - name: run the script
+     shell: /home/ubuntu/jen.sh

@@ -1,0 +1,12 @@
+---
+- name: install trivy
+  hosts: jenkins
+  become: true
+  tasks:
+   - name: copy the script
+     copy:
+      src: scripts/trivy.sh
+      dest: /home/ubuntu
+      mode: 0777
+   - name: run the script
+     shell: /home/ubuntu/trivy.sh
