@@ -1,0 +1,37 @@
+#!/bin/bash
+set -e
+
+# Update the package index and install prerequisites
+apt update
+apt install -y apt-transport-https ca-certificates curl
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+
+# Add Kubernetes GPG key and repository
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+apt update
+
+# Install kubeadm, kubelet, and kubectl
+apt install -y kubelet kubeadm kubectl
+apt-mark hold kubelet kubeadm kubectl
+
+# Disable swap
+swapoff -a
+sed -i '/ swap / s/^/#/' /etc/fstab
+
+# Initialize Kubernetes (adjust pod network CIDR as needed)
+kubeadm init --pod-network-cidr=192.168.0.0/16
+
+# Set up kubectl for the ec2-user
+mkdir -p /home/ubuntu/.kube
+cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
+chown $(id -u):$(id -g) /home/ubuntu/.kube/config
+
+# Install Calico network add-on
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+# (Optional) Enable scheduling on master node
+kubectl taint nodes --all node-role.kubernetes.io/master-
